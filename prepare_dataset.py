@@ -113,7 +113,7 @@ for image_indx in range(nb_images):
 	recon_mask =np.zeros(bin_map.shape)
 	for i in range(len(mask_list)):
 		recon_mask = recon_mask + mask_list[i]
-	print_green(np.sum(bin_map), np.sum(recon_mask))
+	print_green(np.sum(bin_map)); print_red(np.sum(recon_mask))
 
 	# Save images and masks
 	hrSLM_img = io.imread(dataset_dir+img_fnames[image_indx]); mSLM_img = io.imread(dataset_dir+img_fnames1[image_indx])
