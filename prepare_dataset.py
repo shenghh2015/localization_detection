@@ -8,15 +8,15 @@ import scipy.ndimage as ndimage
 
 from helper_function import print_yellow, print_green, print_red, generate_folder
 
-docker = True
+docker = False
 if docker:
 	dataset_dir = '../data/Data_registered/'
 	output_dir = '../data/Processed/'
 else:
 	dataset_dir = './data/Phase_fluo_Cells/Data_registered/'
-	output_dir = '../data/Processed/'
+	output_dir = '/home/sh38/Mask_RCNN/datasets/phase_hr/'
 
-dataset = 'train';  output_dir=output_dir+dataset+'/'
+dataset = 'test';  output_dir=output_dir+dataset+'/'
 csv_file = dataset_dir+'{}.csv'.format(dataset)
 hrSLM_file = dataset_dir+'{}_hrSLIM.csv'.format(dataset)
 
@@ -43,12 +43,16 @@ def find_connected_neighbors(xc, yc, p_set):
 				find_points.append((xc+i, yc+j))
 	return find_points
 
-# nb_images = len(img_fnames)
-nb_images = 10
+nb_images = len(img_fnames)
+#nb_images = 10
 for image_indx in range(nb_images):
 	# Load the map
-# 	image_indx=0; 
-	map = io.imread(dataset_dir+map_fnames[image_indx]); mask_list = []
+# 	image_indx=0;
+	if image_indx%10==0:
+		print_yellow('The {}-th image'.format(image_indx))
+		print_yellow(map_fnames[image_indx])
+	map = io.imread(dataset_dir+map_fnames[image_indx]); map = map[::2,::2]
+	mask_list = []
 
 	# Generate the edge masks for all objects
 	uni_values = np.unique(map)
@@ -112,8 +116,9 @@ for image_indx in range(nb_images):
 	bin_map = map > 0; 
 	recon_mask =np.zeros(bin_map.shape)
 	for i in range(len(mask_list)):
-		recon_mask = recon_mask + mask_list[i]
-	print_green(np.sum(bin_map)); print_red(np.sum(recon_mask))
+		recon_mask = recon_mask + mask_list[i]*map
+	print_green(np.sum(map)); print_red(np.uint8(np.sum(recon_mask)))
+	print_green(np.unique(map)); print_red(np.unique(np.sum(recon_mask)))
 
 	# Save images and masks
 	hrSLM_img = io.imread(dataset_dir+img_fnames[image_indx]); mSLM_img = io.imread(dataset_dir+img_fnames1[image_indx])
@@ -121,6 +126,7 @@ for image_indx in range(nb_images):
 	mSLM_img_n = np.uint8(255*(mSLM_img-np.min(mSLM_img))/(np.max(mSLM_img)-np.min(mSLM_img)))
 	shp = hrSLM_img.shape
 	SLM_img = np.concatenate([hrSLM_img_n.reshape(shp+(1,)), mSLM_img_n.reshape(shp+(1,)), mSLM_img_n.reshape(shp+(1,))], axis =2)
+	SLM_img = SLM_img[::2,::2,:]
 	# ax = fig.add_subplot(2,2,1); cax=ax.imshow(hrSLM_img_n); 
 	# ax = fig.add_subplot(2,2,2); cax=ax.imshow(mSLM_img_n);
 	# ax = fig.add_subplot(2,2,3); cax=ax.imshow(SLM_img); 
